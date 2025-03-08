@@ -1,14 +1,30 @@
 import { createSlice } from '@reduxjs/toolkit';
 
+export interface ICurrentUser {
+  id: string;
+  username: string;
+  email: string;
+}
+
+export interface IUserSliceInitialState {
+  currentUser: null | ICurrentUser;
+  isAuthenticated: boolean;
+  userPreferences: {
+    enableDarkMode: boolean;
+  };
+}
+
+export const userSliceInitialState: IUserSliceInitialState = {
+  currentUser: null,
+  isAuthenticated: false,
+  userPreferences: {
+    enableDarkMode: false
+  }
+};
+
 const userSlice = createSlice({
   name: 'user',
-  initialState: {
-    currentUser: null,
-    isAuthenticated: false,
-    userPreferences: {
-      enableDarkMode: false
-    }
-  },
+  initialState: userSliceInitialState,
   reducers: {
     setCurrentUser: (state, action) => {
       state.currentUser = action.payload;

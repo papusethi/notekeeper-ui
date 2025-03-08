@@ -1,7 +1,6 @@
-import { FileTextOutlined } from '@ant-design/icons';
 import { Card, Empty, Flex, Layout, Typography } from 'antd';
 import React, { useMemo } from 'react';
-import { setCurrentNote } from '../../redux/folder-note-slice/FolderNoteSlice';
+import { INote, setCurrentNote } from '../../redux/folder-note-slice/FolderNoteSlice';
 import { useAppDispatch, useAppSelector } from '../../redux/hooks';
 import { formatDate } from '../../utils/dateFormatter';
 
@@ -18,7 +17,7 @@ const NoteListWrapper: React.FC = () => {
 
   let headerTitle = '';
 
-  if (sideNav.activeSection === 'folders') {
+  if (sideNav.activeSection === 'folders' && foldersMapping && sideNav?.activeFolderId) {
     headerTitle = foldersMapping?.[sideNav?.activeFolderId];
   } else {
     headerTitle = topLevelNavMapping?.[sideNav?.activeSection];
@@ -26,7 +25,7 @@ const NoteListWrapper: React.FC = () => {
 
   const filteredNotes = useMemo(() => {
     // filteration logic
-    let filteredNotes = [];
+    let filteredNotes: INote[] = [];
 
     switch (sideNav.activeSection) {
       case 'home': {
@@ -78,7 +77,7 @@ const NoteListWrapper: React.FC = () => {
     return filteredNotes;
   }, [notes, sideNav?.activeFolderId, sideNav?.activeSection]);
 
-  const handleClickCard = (note) => {
+  const handleClickCard = (note: INote) => {
     dispatch(setCurrentNote(note));
   };
 

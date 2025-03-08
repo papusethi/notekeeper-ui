@@ -12,7 +12,7 @@ import { Button, Divider, Dropdown, Empty, Flex, MenuProps, message, theme, Tool
 import React, { useState } from 'react';
 import ReactQuill from 'react-quill';
 import 'react-quill/dist/quill.snow.css';
-import { setCurrentNote, setNotes } from '../../redux/folder-note-slice/FolderNoteSlice';
+import { INote, setCurrentNote, setNotes } from '../../redux/folder-note-slice/FolderNoteSlice';
 import { useAppDispatch, useAppSelector } from '../../redux/hooks';
 import { initAxiosInstance } from '../../utils/axiosInstance';
 import { formatDate } from '../../utils/dateFormatter';
@@ -29,12 +29,12 @@ const NoteEditorWrapper: React.FC = () => {
 
   const { mutate: mutateUpdateNote } = useMutation({
     mutationKey: ['update-current-note'],
-    mutationFn: (payload) => {
+    mutationFn: (payload: { noteId: string; note: INote }) => {
       return initAxiosInstance().put(`/notes/${payload?.noteId}`, JSON.stringify(payload?.note));
     },
-    onSuccess: (data, payload) => {
-      message.success(data?.data?.message);
-      dispatch(setNotes(data?.data?.data));
+    onSuccess: (response, payload) => {
+      message.success(response?.data?.message);
+      dispatch(setNotes(response?.data?.data));
       dispatch(setCurrentNote(payload?.note));
     },
     onError: (error) => {
@@ -45,7 +45,7 @@ const NoteEditorWrapper: React.FC = () => {
 
   const { mutate: mutateDeleteNote } = useMutation({
     mutationKey: ['delete-current-note'],
-    mutationFn: (payload) => {
+    mutationFn: (payload: { noteId: string }) => {
       return initAxiosInstance().delete(`/notes/${payload?.noteId}`);
     },
     onSuccess: (response) => {
@@ -60,6 +60,8 @@ const NoteEditorWrapper: React.FC = () => {
   });
 
   const handleMenuClick: MenuProps['onClick'] = (e) => {
+    if (!currentNote) return;
+
     if (e.key === 'favorite') {
       const updatedNote = {
         ...currentNote,
@@ -122,6 +124,8 @@ const NoteEditorWrapper: React.FC = () => {
   };
 
   const handleClickSave = () => {
+    if (!currentNote) return;
+
     const updatedNote = { ...currentNote, description: editorValue };
     mutateUpdateNote({ noteId: currentNote?._id, note: updatedNote });
   };
@@ -168,7 +172,7 @@ const NoteEditorWrapper: React.FC = () => {
                   <FolderOutlined style={{ fontSize: 16 }} />
                   <Typography.Text type="secondary">Folder</Typography.Text>
                 </Flex>
-                <Typography.Text>{foldersMapping?.[currentNote?.folderId] || 'Home'}</Typography.Text>
+                <Typography.Text>{currentNote?.folderId ? foldersMapping?.[currentNote.folderId] : 'Home'}</Typography.Text>
               </Flex>
 
               <Divider style={{ margin: 0 }} />

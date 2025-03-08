@@ -3,22 +3,21 @@ import { useMutation } from '@tanstack/react-query';
 import { Button, Input, message, Modal } from 'antd';
 import React, { Fragment, useState } from 'react';
 import { setNotes } from '../../redux/folder-note-slice/FolderNoteSlice';
-import { useAppDispatch, useAppSelector } from '../../redux/hooks';
+import { useAppDispatch } from '../../redux/hooks';
 import { initAxiosInstance } from '../../utils/axiosInstance';
 
 const NewNoteButton: React.FC = () => {
   const dispatch = useAppDispatch();
-  const { currentUser } = useAppSelector((state) => state.user);
 
   const [isModalOpen, setIsModalOpen] = useState(false);
   const [noteTitle, setNoteTitle] = useState('');
 
   const { mutate, isPending } = useMutation({
     mutationKey: ['create-note'],
-    mutationFn: (payload) => {
+    mutationFn: (payload: { title: string }) => {
       return initAxiosInstance().post('/notes', JSON.stringify(payload));
     },
-    onSuccess: async (response) => {
+    onSuccess: (response) => {
       message.success(response.data.message);
       setIsModalOpen(false);
       setNoteTitle('');
@@ -35,10 +34,7 @@ const NewNoteButton: React.FC = () => {
   };
 
   const handleOk = () => {
-    const payload = {
-      userId: currentUser?.id,
-      title: noteTitle || 'Untitled'
-    };
+    const payload = { title: noteTitle || 'Untitled' };
     mutate(payload);
   };
 

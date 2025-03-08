@@ -5,6 +5,7 @@ import { Link, useNavigate } from 'react-router-dom';
 import { useAppDispatch } from '../../redux/hooks';
 import { setCurrentUser, setIsAuthenticated } from '../../redux/user-slice/userSlice';
 import { initAxiosInstance } from '../../utils/axiosInstance';
+import { formatErrorMessage } from '../../utils/utils';
 
 interface SignUpFormValues {
   username: string;
@@ -34,8 +35,8 @@ const SignUpPage: React.FC = () => {
       navigate('/dashboard');
     },
     onError: (error) => {
-      const errorMessage = error?.response?.data?.message;
-      message.error(errorMessage || error.message);
+      const errorMessage = formatErrorMessage(error);
+      message.error(errorMessage);
 
       localStorage.removeItem('token');
       dispatch(setCurrentUser(null));

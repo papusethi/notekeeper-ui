@@ -49,7 +49,7 @@ const SideNavigation: React.FC = () => {
     }
   ];
 
-  const handleSelect = (value) => {
+  const handleSelect = (value: { key: string }) => {
     if (topLevelKeys?.includes(value?.key)) {
       dispatch(setSideNavActiveSection(value?.key));
       dispatch(setSideNavActiveFolderId(null));
@@ -59,9 +59,9 @@ const SideNavigation: React.FC = () => {
     }
   };
 
-  const selectedKeys = [];
+  const selectedKeys: string[] = [];
 
-  if (sideNav?.activeSection === 'folders') {
+  if (sideNav?.activeSection === 'folders' && sideNav?.activeFolderId) {
     selectedKeys.push(sideNav?.activeFolderId);
   } else {
     selectedKeys.push(sideNav?.activeSection);

@@ -3,22 +3,21 @@ import { useMutation } from '@tanstack/react-query';
 import { Button, Input, message, Modal, Tooltip } from 'antd';
 import React, { Fragment, useState } from 'react';
 import { setFolders } from '../../redux/folder-note-slice/FolderNoteSlice';
-import { useAppDispatch, useAppSelector } from '../../redux/hooks';
+import { useAppDispatch } from '../../redux/hooks';
 import { initAxiosInstance } from '../../utils/axiosInstance';
 
 const NewFolderButton: React.FC = () => {
   const dispatch = useAppDispatch();
-  const { currentUser } = useAppSelector((state) => state.user);
 
   const [isModalOpen, setIsModalOpen] = useState(false);
   const [folderName, setFolderName] = useState('');
 
   const { mutate, isPending } = useMutation({
     mutationKey: ['create-folder'],
-    mutationFn: (payload) => {
+    mutationFn: (payload: { name: string }) => {
       return initAxiosInstance().post('/folders', JSON.stringify(payload));
     },
-    onSuccess: async (response) => {
+    onSuccess: (response) => {
       message.success(response.data.message);
       setIsModalOpen(false);
       setFolderName('');
@@ -36,7 +35,6 @@ const NewFolderButton: React.FC = () => {
 
   const handleOk = () => {
     const payload = {
-      userId: currentUser?.id,
       name: folderName || 'New Folder'
     };
     mutate(payload);

@@ -3,40 +3,43 @@ import { useMutation } from '@tanstack/react-query';
 import { Button, Dropdown, Input, MenuProps, message, Modal } from 'antd';
 import React, { useState } from 'react';
 import { setFolders, setSideNavActiveFolderId, setSideNavActiveSection } from '../../redux/folder-note-slice/FolderNoteSlice';
-import { useAppDispatch, useAppSelector } from '../../redux/hooks';
+import { useAppDispatch } from '../../redux/hooks';
 import { initAxiosInstance } from '../../utils/axiosInstance';
+import { formatErrorMessage } from '../../utils/utils';
 import { topLevelKeys } from '../side-navigation/SideNavigation';
 
-const DeleteFolderButton: React.FC = (props) => {
+interface IDeleteFolderButtonProps {
+  folder: { _id: string; name: string };
+}
+
+const DeleteFolderButton: React.FC<IDeleteFolderButtonProps> = (props) => {
   const { folder } = props;
 
   const dispatch = useAppDispatch();
-
-  const { currentUser } = useAppSelector((state) => state.user);
 
   const [isModalOpen, setIsModalOpen] = useState(false);
   const [folderName, setFolderName] = useState(folder.name);
 
   const { mutate: mutateDeleteFolder, isPending: isPendingDeleteFolder } = useMutation({
     mutationKey: ['delete-folder'],
-    mutationFn: (payload) => {
+    mutationFn: (payload: { folderId: string }) => {
       return initAxiosInstance().delete(`/folders/${payload?.folderId}`);
     },
-    onSuccess: async (response) => {
+    onSuccess: (response) => {
       message.success(response.data.message);
       dispatch(setFolders(response?.data?.data));
       dispatch(setSideNavActiveSection(topLevelKeys[0]));
       dispatch(setSideNavActiveFolderId(null));
     },
     onError: (error) => {
-      console.error('App error: ', error);
-      message.error(error.message);
+      const errorMessage = formatErrorMessage(error);
+      message.error(errorMessage);
     }
   });
 
   const { mutate: mutateUpdateFolder, isPending: isPendingUpdateFolder } = useMutation({
     mutationKey: ['update-folder'],
-    mutationFn: (payload) => {
+    mutationFn: (payload: { folderId: string; name: string }) => {
       return initAxiosInstance().put(`/folders/${payload.folderId}`, JSON.stringify(payload));
     },
     onSuccess: (response) => {
@@ -46,13 +49,13 @@ const DeleteFolderButton: React.FC = (props) => {
       dispatch(setFolders(response?.data?.data));
     },
     onError: (error) => {
-      console.error('App error: ', error);
-      message.error(error.message);
+      const errorMessage = formatErrorMessage(error);
+      message.error(errorMessage);
     }
   });
 
   const handleDeleteClick = () => {
-    mutateDeleteFolder({ folderId: folder._id });
+    mutateDeleteFolder({ folderId: folder?._id });
   };
 
   const showModal = () => {
@@ -61,11 +64,7 @@ const DeleteFolderButton: React.FC = (props) => {
   };
 
   const handleOk = () => {
-    const payload = {
-      userId: currentUser?.id,
-      folderId: folder._id,
-      name: folderName || folder.name
-    };
+    const payload = { folderId: folder._id, name: folderName || folder.name };
     mutateUpdateFolder(payload);
   };
 

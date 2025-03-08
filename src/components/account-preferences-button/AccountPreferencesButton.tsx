@@ -6,6 +6,7 @@ import { useNavigate } from 'react-router-dom';
 import { useAppDispatch } from '../../redux/hooks';
 import { setCurrentUser, setIsAuthenticated } from '../../redux/user-slice/userSlice';
 import { initAxiosInstance } from '../../utils/axiosInstance';
+import { formatErrorMessage } from '../../utils/utils';
 import { MenuItem } from '../side-navigation/SideNavigation';
 import DataControlSection from './DataControlSection';
 import PersonalizeSection from './PersonalizeSection';
@@ -34,8 +35,8 @@ const AccountPreferencesButton: React.FC = () => {
       navigate('/login');
     },
     onError: (error) => {
-      const errorMessage = error?.response?.data?.message;
-      message.error(errorMessage || error.message);
+      const errorMessage = formatErrorMessage(error);
+      message.error(errorMessage);
     }
   });
 

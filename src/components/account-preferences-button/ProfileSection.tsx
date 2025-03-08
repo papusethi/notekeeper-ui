@@ -1,7 +1,7 @@
 import { useMutation } from '@tanstack/react-query';
 import { Button, Form, Input, message } from 'antd';
 import { useAppDispatch, useAppSelector } from '../../redux/hooks';
-import { setCurrentUser } from '../../redux/user-slice/userSlice';
+import { ICurrentUser, setCurrentUser } from '../../redux/user-slice/userSlice';
 import { initAxiosInstance } from '../../utils/axiosInstance';
 
 const ProfileSection: React.FC = () => {
@@ -10,7 +10,7 @@ const ProfileSection: React.FC = () => {
 
   const { mutate: mutateUpdateUser, isPending } = useMutation({
     mutationKey: ['update-user'],
-    mutationFn: (payload) => {
+    mutationFn: (payload: ICurrentUser) => {
       return initAxiosInstance().put(`/user/${currentUser?.id}`, payload);
     },
     onSuccess: (response) => {
@@ -25,7 +25,7 @@ const ProfileSection: React.FC = () => {
 
   const [form] = Form.useForm();
 
-  const handleUpdate = (values) => {
+  const handleUpdate = (values: ICurrentUser) => {
     mutateUpdateUser(values);
   };
 

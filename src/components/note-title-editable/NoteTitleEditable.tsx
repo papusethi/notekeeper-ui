@@ -14,8 +14,8 @@ const NoteTitleEditable: React.FC = () => {
     setEnableEditable(true);
   };
 
-  const handleBlurInput = (e) => {
-    const value = e.target.value;
+  const handleBlurInput = (event: React.ChangeEvent<HTMLInputElement>) => {
+    const value = event?.target?.value;
     dispatch(setCurrentNote({ ...currentNote, title: value || 'Untitled' }));
     setEnableEditable(false);
   };
