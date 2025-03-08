@@ -9,7 +9,7 @@ const Dashboard: React.FC = () => {
 
   return (
     <div style={{ height: 'inherit' }}>
-      <Row style={{ height: 'inherit' }}>
+      <Row wrap={false} style={{ height: 'inherit' }}>
         <Col
           span={6}
           style={{
@@ -23,7 +23,8 @@ const Dashboard: React.FC = () => {
         <Col
           span={6}
           style={{
-            maxWidth: 400,
+            width: 360,
+            maxWidth: 360,
             borderRight: `1px solid ${token.colorBorderSecondary}`
           }}
         >

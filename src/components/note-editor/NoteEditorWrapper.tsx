@@ -9,25 +9,21 @@ import {
 } from '@ant-design/icons';
 import { useMutation } from '@tanstack/react-query';
 import { Button, Divider, Dropdown, Empty, Flex, MenuProps, message, theme, Tooltip, Typography } from 'antd';
-import React, { useState } from 'react';
+import React, { useEffect, useState } from 'react';
 import ReactQuill from 'react-quill';
 import 'react-quill/dist/quill.snow.css';
 import { INote, setCurrentNote, setNotes } from '../../redux/folder-note-slice/FolderNoteSlice';
 import { useAppDispatch, useAppSelector } from '../../redux/hooks';
 import { initAxiosInstance } from '../../utils/axiosInstance';
 import { formatDate } from '../../utils/dateFormatter';
+import { formatErrorMessage } from '../../utils/utils';
 import NoteTitleEditable from '../note-title-editable/NoteTitleEditable';
 
-const NoteEditorWrapper: React.FC = () => {
+const NoteEditorFolder: React.FC = () => {
   const dispatch = useAppDispatch();
-
   const { currentNote, foldersMapping } = useAppSelector((state) => state.folderNote);
 
-  const [editorValue, setEditorValue] = useState('');
-
-  const color = theme.useToken().token.colorText;
-
-  const { mutate: mutateUpdateNote } = useMutation({
+  const { mutate: mutateUpdateNote, isPending: isPendingUpdateNote } = useMutation({
     mutationKey: ['update-current-note'],
     mutationFn: (payload: { noteId: string; note: INote }) => {
       return initAxiosInstance().put(`/notes/${payload?.noteId}`, JSON.stringify(payload?.note));
@@ -38,8 +34,74 @@ const NoteEditorWrapper: React.FC = () => {
       dispatch(setCurrentNote(payload?.note));
     },
     onError: (error) => {
-      console.error('App error: ', error);
-      message.error(error.message);
+      const errorMessage = formatErrorMessage(error);
+      message.error(errorMessage);
+    }
+  });
+
+  const folderOptions = foldersMapping ? Object.entries(foldersMapping).map((entry) => ({ key: entry[0], label: entry[1] })) : [];
+
+  const items: MenuProps['items'] = [{ key: 'home', label: 'Home' }, { type: 'divider' }, ...folderOptions];
+
+  const handleSelect: MenuProps['onSelect'] = (menuItem) => {
+    if (!currentNote) return;
+
+    const updatedNote = { ...currentNote };
+
+    if (menuItem.key === 'home') {
+      updatedNote.folderId = null;
+    } else {
+      updatedNote.folderId = menuItem.key;
+    }
+
+    mutateUpdateNote({ noteId: currentNote?._id, note: updatedNote });
+  };
+
+  return (
+    <Dropdown
+      disabled={isPendingUpdateNote}
+      menu={{
+        items,
+        selectable: true,
+        defaultSelectedKeys: currentNote?.folderId ? [currentNote?.folderId] : ['home'],
+        onSelect: handleSelect
+      }}
+    >
+      {isPendingUpdateNote ? (
+        <Typography.Text>Updating folder</Typography.Text>
+      ) : (
+        <Typography.Text>{currentNote?.folderId ? foldersMapping?.[currentNote.folderId] : 'Home'}</Typography.Text>
+      )}
+    </Dropdown>
+  );
+};
+
+const NoteEditorWrapper: React.FC = () => {
+  const dispatch = useAppDispatch();
+
+  const { currentNote, foldersMapping } = useAppSelector((state) => state.folderNote);
+
+  const [editorValue, setEditorValue] = useState('');
+
+  useEffect(() => {
+    setEditorValue(currentNote?.content ?? '');
+  }, [currentNote?.content]);
+
+  const color = theme.useToken().token.colorText;
+
+  const { mutate: mutateUpdateNote, isPending: isPendingUpdateNote } = useMutation({
+    mutationKey: ['update-current-note'],
+    mutationFn: (payload: { noteId: string; note: INote }) => {
+      return initAxiosInstance().put(`/notes/${payload?.noteId}`, JSON.stringify(payload?.note));
+    },
+    onSuccess: (response, payload) => {
+      message.success(response?.data?.message);
+      dispatch(setNotes(response?.data?.data));
+      dispatch(setCurrentNote(payload?.note));
+    },
+    onError: (error) => {
+      const errorMessage = formatErrorMessage(error);
+      message.error(errorMessage);
     }
   });
 
@@ -54,40 +116,32 @@ const NoteEditorWrapper: React.FC = () => {
       dispatch(setCurrentNote(null));
     },
     onError: (error) => {
-      console.error('App error: ', error);
-      message.error(error.message);
+      const errorMessage = formatErrorMessage(error);
+      message.error(errorMessage);
     }
   });
 
-  const handleMenuClick: MenuProps['onClick'] = (e) => {
+  const handleMenuClick: MenuProps['onClick'] = (menuItem) => {
     if (!currentNote) return;
 
-    if (e.key === 'favorite') {
-      const updatedNote = {
-        ...currentNote,
-        isStarred: !currentNote?.isStarred
-      };
-      mutateUpdateNote({ noteId: currentNote?._id, note: updatedNote });
-    }
-
-    if (e.key === 'archive') {
-      const updatedNote = {
-        ...currentNote,
-        isArchived: !currentNote?.isArchived
-      };
-      mutateUpdateNote({ noteId: currentNote?._id, note: updatedNote });
-    }
-
-    if (e.key === 'trash') {
-      const updatedNote = {
-        ...currentNote,
-        isDeleted: !currentNote?.isDeleted
-      };
-      mutateUpdateNote({ noteId: currentNote?._id, note: updatedNote });
-    }
-
-    if (e.key === 'delete') {
+    if (menuItem.key === 'delete') {
       mutateDeleteNote({ noteId: currentNote?._id });
+    } else {
+      const updatedNote = { ...currentNote };
+
+      if (menuItem.key === 'favorite') {
+        updatedNote.isStarred = !currentNote?.isStarred;
+      }
+
+      if (menuItem.key === 'archive') {
+        updatedNote.isArchived = !currentNote?.isArchived;
+      }
+
+      if (menuItem.key === 'trash') {
+        updatedNote.isDeleted = !currentNote?.isDeleted;
+      }
+
+      mutateUpdateNote({ noteId: currentNote?._id, note: updatedNote });
     }
   };
 
@@ -126,7 +180,7 @@ const NoteEditorWrapper: React.FC = () => {
   const handleClickSave = () => {
     if (!currentNote) return;
 
-    const updatedNote = { ...currentNote, description: editorValue };
+    const updatedNote = { ...currentNote, content: editorValue };
     mutateUpdateNote({ noteId: currentNote?._id, note: updatedNote });
   };
 
@@ -142,12 +196,12 @@ const NoteEditorWrapper: React.FC = () => {
             <NoteTitleEditable />
 
             <Flex justify="space-between" align="center" gap={8}>
-              <Button type="primary" onClick={handleClickSave}>
+              <Button type="primary" loading={isPendingUpdateNote} onClick={handleClickSave}>
                 Save
               </Button>
 
-              <Dropdown arrow menu={menuProps}>
-                <Button shape="circle" icon={<EllipsisOutlined />} />
+              <Dropdown arrow menu={menuProps} disabled={isPendingUpdateNote}>
+                <Button shape="circle" loading={isPendingUpdateNote} icon={<EllipsisOutlined />} />
               </Dropdown>
               <Tooltip title="Close">
                 <Button shape="circle" icon={<CloseOutlined />} onClick={handleClickClose} />
@@ -172,7 +226,9 @@ const NoteEditorWrapper: React.FC = () => {
                   <FolderOutlined style={{ fontSize: 16 }} />
                   <Typography.Text type="secondary">Folder</Typography.Text>
                 </Flex>
-                <Typography.Text>{currentNote?.folderId ? foldersMapping?.[currentNote.folderId] : 'Home'}</Typography.Text>
+
+                <NoteEditorFolder />
+                {/* <Typography.Text>{currentNote?.folderId ? foldersMapping?.[currentNote.folderId] : 'Home'}</Typography.Text> */}
               </Flex>
 
               <Divider style={{ margin: 0 }} />

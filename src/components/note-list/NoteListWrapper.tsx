@@ -62,7 +62,7 @@ const NoteListWrapper: React.FC = () => {
         filteredNotes = notes.filter((item) => item?.isDeleted);
         break;
       }
-      case 'folder': {
+      case 'folders': {
         filteredNotes = notes.filter((item) => {
           if (item?.folderId === sideNav?.activeFolderId && !item.isArchived && !item.isDeleted) {
             return true;
