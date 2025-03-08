@@ -79,7 +79,7 @@ const NoteEditorFolder: React.FC = () => {
 const NoteEditorWrapper: React.FC = () => {
   const dispatch = useAppDispatch();
 
-  const { currentNote, foldersMapping } = useAppSelector((state) => state.folderNote);
+  const { currentNote } = useAppSelector((state) => state.folderNote);
 
   const [editorValue, setEditorValue] = useState('');
 
