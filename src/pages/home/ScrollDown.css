@@ -1,0 +1,17 @@
+.bounce {
+  animation: moveUpDown 2s ease-in-out infinite;
+}
+
+@keyframes moveUpDown {
+  0% {
+    transform: translateY(0);
+  }
+
+  50% {
+    transform: translateY(-50px);
+  }
+
+  Ø 100% {
+    transform: translateY(0);
+  }
+}
